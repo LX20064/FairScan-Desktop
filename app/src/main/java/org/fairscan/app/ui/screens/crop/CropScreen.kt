@@ -351,12 +351,9 @@ val QuadSaver: Saver<MutableState<Quad?>, *> = listSaver(
 @Preview(name = "RTL", locale = "ar", showSystemUi = true)
 fun EditPageScreenPreview() {
     FairScanTheme {
-        // 测试素材已从仓库移除（.gitignore 排除），资产缺失时回退 1x1 空白位图，避免预览崩溃
-        val dummyImage = runCatching {
-            LocalContext.current.assets.open("gallica.bnf.fr-bpt6k5530456s-1.jpg").use { input ->
-                BitmapFactory.decodeStream(input)
-            }
-        }.getOrNull() ?: Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888)
+        val dummyImage = LocalContext.current.assets.open("gallica.bnf.fr-bpt6k5530456s-1.jpg").use { input ->
+            BitmapFactory.decodeStream(input)
+        }
         val quad = Quad(Point(.1, .1), Point(.9, .1), Point(.9, .9), Point(.1, .9))
         CropScreen(
             pageId = "123",

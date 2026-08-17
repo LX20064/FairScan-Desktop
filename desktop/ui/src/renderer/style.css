@@ -30,7 +30,10 @@
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 html, body { height: 100%; overflow: hidden; }
-html { border-radius: 8px; }
+/* 窗口边缘圆角：仅 Win11（DWM 原生圆角）启用；Win10/更早版本窗口为直角，内容保持直角一致。
+   主进程会给 <html> 添加 mat-win11 类。 */
+html { border-radius: 0; }
+html.mat-win11 { border-radius: 8px; }
 
 body {
   font-family: var(--font);
@@ -41,12 +44,16 @@ body {
   display: flex;
   flex-direction: column;
   user-select: none;
+  border-radius: 0;
+  /* 窗口外缘阴影（仅 Win11 圆角窗口）：替代系统窗口阴影 */
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+}
+html.mat-win11 body {
   border-radius: 8px;
-  /* 窗口外缘阴影，替代系统窗口阴影 */
   box-shadow:
     inset 0 0 0 1px rgba(0, 0, 0, 0.08),
     0 8px 32px rgba(0, 0, 0, 0.28);
-  overflow: hidden;
 }
 body.maximized { border-radius: 0; box-shadow: none; }
 body.maximized .titlebar { border-radius: 0; }

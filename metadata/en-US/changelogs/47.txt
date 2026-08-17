@@ -1,2 +1,0 @@
-- Fix crash when FairScan is used via external apps
-- Add translation: Turkish

@@ -1,2 +1,0 @@
-- New Swedish translation
-- Remove ACCESS_NETWORK_STATE permission

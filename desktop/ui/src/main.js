@@ -82,7 +82,9 @@ if (process.platform === 'win32') {
         const accent = Buffer.alloc(16);
         accent.writeUInt32LE(ACCENT_ENABLE_ACRYLICBLURBEHIND, 0);
         accent.writeUInt32LE(0, 4);  // AccentFlags
-        accent.writeUInt32LE(0, 8);  // GradientColor（0 = 不额外染色，透出 CSS 半透明白）
+        // GradientColor（AABBGGRR）：0x00 时 DWM 只做纯模糊不染色，透明度过高；
+        // 给白底染色（alpha 0xB4≈70%）模拟 Win11 亚克力的增白效果
+        accent.writeUInt32LE(0xB4FAFAFA, 8);
         accent.writeUInt32LE(0, 12); // AnimationId
         const data = Buffer.alloc(24);
         data.writeUInt32LE(WCA_ACCENT_POLICY, 0);
@@ -210,6 +212,15 @@ function createWindow() {
     mainWindow.webContents.on('did-finish-load', () => {
       mainWindow.webContents
         .executeJavaScript('document.documentElement.classList.add("mat-css")')
+        .catch(() => {});
+    });
+  }
+
+  // Win10 1809+：SWCA 亚克力只提供模糊，页面用更高不透明度白底补偿透明白平衡
+  if (IS_WIN10_ACRYLIC) {
+    mainWindow.webContents.on('did-finish-load', () => {
+      mainWindow.webContents
+        .executeJavaScript('document.documentElement.classList.add("mat-acrylic")')
         .catch(() => {});
     });
   }

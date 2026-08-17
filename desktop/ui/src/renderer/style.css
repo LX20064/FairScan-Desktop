@@ -611,3 +611,11 @@ html.mat-css body {
   -webkit-backdrop-filter: blur(24px) saturate(140%);
   backdrop-filter: blur(24px) saturate(140%);
 }
+
+/* ===== Win10 1809+ SWCA 亚克力透明白平衡 =====
+   主进程会给 <html> 添加 mat-acrylic 类。SWCA 的
+   ACCENT_ENABLE_ACRYLICBLURBEHIND 只提供系统级模糊，染白程度远低于
+   Win11 原生亚克力，因此页面白底不透明度从 0.18 提升，防止桌面透出过高。 */
+html.mat-acrylic body {
+  background: rgba(250, 250, 250, 0.5);
+}

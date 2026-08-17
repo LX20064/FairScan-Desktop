@@ -93,14 +93,6 @@ https://hosted.weblate.org/projects/fairscan/
 
 ---
 
-## Screenshots
-
-| Scan | Preview | Save & Share |
-|------|---------|--------------|
-| ![](metadata/en-US/images/phoneScreenshots/1.jpg) | ![](metadata/en-US/images/phoneScreenshots/2.jpg) | ![](metadata/en-US/images/phoneScreenshots/3.jpg) |
-
----
-
 ## Features
 
 - **Clear, distraction-free interface**

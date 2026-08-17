@@ -734,5 +734,7 @@ private fun ScreenPreview(
 @Composable
 private fun debugImage(imgName: String): Jpeg {
     val context = LocalContext.current
-    return Jpeg(context.assets.open(imgName).readBytes())
+    // 测试素材已从仓库移除（.gitignore 排除），资产缺失时返回空图，避免预览崩溃
+    return runCatching { Jpeg(context.assets.open(imgName).readBytes()) }
+        .getOrElse { Jpeg(ByteArray(0)) }
 }

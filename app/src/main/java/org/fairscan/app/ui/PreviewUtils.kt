@@ -35,5 +35,7 @@ fun fakeDocument(pageIds: ImmutableList<String>, context: Context): DocumentUiMo
     return DocumentUiModel(pageKeys)
 }
 
+// 测试素材已从仓库移除（.gitignore 排除），资产缺失时返回空图，避免预览崩溃
 fun fakeImage(id: String, context: Context): Jpeg =
-    Jpeg(context.assets.open("${id}.jpg").readBytes())
+    runCatching { Jpeg(context.assets.open("${id}.jpg").readBytes()) }
+        .getOrElse { Jpeg(ByteArray(0)) }

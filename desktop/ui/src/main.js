@@ -37,6 +37,8 @@ const APP_ICON = path.join(__dirname, 'icon.ico');
 let enableRoundedCorners = null;
 // Windows 10 1809+ 亚克力：SetWindowCompositionAttribute(ACCENT_ENABLE_ACRYLICBLURBEHIND)
 let enableWin10Acrylic = null;
+// Windows 10 1809+ 圆角窗口：SetWindowRgn 裁剪（DWM 圆角 API 仅 Win11 有效）
+let applyWin10Rgn = null;
 if (process.platform === 'win32') {
   try {
     const koffi = require('koffi');
@@ -96,6 +98,37 @@ if (process.platform === 'win32') {
       } catch (e) {
         console.warn('Win10 acrylic failed:', e.message);
         return false;
+      }
+    };
+
+    // Win10 1809+：DWM 圆角 API（DWMWA_WINDOW_CORNER_PREFERENCE）仅 Win11 有效，
+    // 这里用 SetWindowRgn(CreateRoundRectRgn) 把窗口本身裁成圆角，与 CSS border-radius 对齐
+    const gdi32 = koffi.load('gdi32.dll');
+    const HRGN = koffi.alias('HRGN', HANDLE);
+    const CreateRoundRectRgn = gdi32.func(
+      '__stdcall', 'CreateRoundRectRgn', HRGN,
+      ['int32', 'int32', 'int32', 'int32', 'int32', 'int32']
+    );
+    const SetWindowRgn = user32.func('__stdcall', 'SetWindowRgn', 'int32', [HWND, HRGN, 'int32']);
+    const GetWindowRect = user32.func('__stdcall', 'GetWindowRect', 'bool', [HWND, 'void *']);
+    applyWin10Rgn = (hwndBuf, radiusDip) => {
+      try {
+        const hwnd = koffi.decode(hwndBuf, HANDLE);
+        const rect = Buffer.alloc(16);
+        if (!GetWindowRect(hwnd, rect)) return;
+        const w = rect.readInt32LE(8) - rect.readInt32LE(0);
+        const h = rect.readInt32LE(12) - rect.readInt32LE(4);
+        let r = 0;
+        if (radiusDip > 0 && mainWindow && !mainWindow.isDestroyed()) {
+          const [dipW] = mainWindow.getSize();
+          const scale = dipW > 0 ? w / dipW : 1; // 物理像素 / DIP，适配系统缩放
+          r = Math.round(radiusDip * scale);
+        }
+        const hrgn = CreateRoundRectRgn(0, 0, w + 1, h + 1, r * 2, r * 2);
+        if (hrgn) SetWindowRgn(hwnd, hrgn, 1);
+        console.log('Win10 window region applied: radius', r, 'px, size', w, 'x', h);
+      } catch (e) {
+        console.warn('Win10 rounded window failed:', e.message);
       }
     };
   } catch (e) {
@@ -191,7 +224,7 @@ function createWindow() {
   mainWindow.on('unmaximize', () => send('win:state', { maximized: false }));
 
   // Windows 11：窗口显示后请求 DWM 圆角（frame:false 下 CSS 已负责圆角，此调用作为兜底）
-  // Windows 10 1809+：显示后调用 SetWindowCompositionAttribute 启用亚克力
+  // Windows 10 1809+：显示后调用 SetWindowCompositionAttribute 启用亚克力 + SetWindowRgn 圆角
   mainWindow.once('ready-to-show', () => {
     mainWindow.show();
     // 延迟一帧，确保 HWND 已完成创建并可见
@@ -204,8 +237,27 @@ function createWindow() {
         // SWCA 亚克力失败：回退不透明纯白窗口，避免“透穿桌面”观感
         mainWindow.setBackgroundColor('#fafafa');
       }
+      if (IS_WIN10_ACRYLIC && applyWin10Rgn) {
+        applyWin10Rgn(hwndBuf, mainWindow.isMaximized() ? 0 : 8);
+      }
     }, 80);
   });
+
+  // Win10 1809+：窗口 resize 后 region 不会自动跟随，需按新尺寸重建（防抖）；
+  // 最大化时按 Windows 惯例裁成直角，与 body.maximized 去掉 CSS 圆角保持一致
+  if (IS_WIN10_ACRYLIC && applyWin10Rgn) {
+    let rgnTimer = null;
+    const applyRgn = () => {
+      if (!mainWindow || mainWindow.isDestroyed()) return;
+      applyWin10Rgn(mainWindow.getNativeWindowHandle(), mainWindow.isMaximized() ? 0 : 8);
+    };
+    mainWindow.on('resize', () => {
+      if (rgnTimer) clearTimeout(rgnTimer);
+      rgnTimer = setTimeout(applyRgn, 120);
+    });
+    mainWindow.on('maximize', applyRgn);
+    mainWindow.on('unmaximize', applyRgn);
+  }
 
   // Win10 <1809：无系统亚克力，给页面加 mat-css 类启用 CSS 毛玻璃回退
   if (IS_WIN10_LEGACY) {

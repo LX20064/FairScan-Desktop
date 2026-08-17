@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths xmlns:android="http://schemas.android.com/apk/res/android">
+    <cache-path
+        name="pdfs"
+        path="pdfs/" />
+    <external-path
+        name="external_files"
+        path="." />
+    <!-- source images (to send the last captured image) -->
+    <files-path
+        name="sources"
+        path="sources/" />
+    <!-- source images, when scanning via Intent (to send the last captured image) -->
+    <cache-path
+        name="session_sources"
+        path="sessions/" />
+</paths>

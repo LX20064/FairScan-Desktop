@@ -1,0 +1,81 @@
+{
+  "name": "fairscan-desktop-ui-win7",
+  "productName": "FairScan Desktop (Win7)",
+  "version": "0.1.0",
+  "description": "FairScan 桌面工作站 Win7 SP1 兼容版（Electron 22 + JVM 处理内核）",
+  "author": "FairScan authors",
+  "main": "src/main.js",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder --win",
+    "dist:dir": "electron-builder --win --dir"
+  },
+  "build": {
+    "appId": "org.fairscan.desktop",
+    "productName": "FairScan Desktop",
+    "directories": {
+      "output": "dist-win7"
+    },
+    "files": [
+      "src/**/*",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "../build/install/fairscan-desktop",
+        "to": "kernel",
+        "filter": [
+          "**/*"
+        ]
+      },
+      {
+        "from": "../models",
+        "to": "models"
+      },
+      {
+        "from": "../tessdata",
+        "to": "tessdata"
+      },
+      {
+        "from": "../build/jre",
+        "to": "jre"
+      }
+    ],
+    "win": {
+      "icon": "src/icon.ico",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "nsis": {
+      "artifactName": "FairScan-Win7-Setup-${version}-${arch}.${ext}",
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "FairScan Desktop"
+    },
+    "portable": {
+      "artifactName": "FairScan-Win7-Portable-${version}-${arch}.${ext}"
+    }
+  },
+  "devDependencies": {
+    "electron": "22.3.27",
+    "electron-builder": "^26.0.12"
+  },
+  "dependencies": {
+    "koffi": "^3.1.5"
+  }
+}

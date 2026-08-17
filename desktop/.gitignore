@@ -1,0 +1,17 @@
+# 构建产物
+.gradle/
+build/
+.kotlin/
+
+# Python 验证环境
+.venv/
+
+# 运行输出
+/output/
+
+# 模型文件（从 release 下载；ONNX 为已废弃路线产物）
+/models/*.tflite
+/models/*.onnx
+
+# Electron UI
+/ui/node_modules/

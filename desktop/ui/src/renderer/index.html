@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self'; img-src 'self' file: data: blob:; style-src 'self' 'unsafe-inline'; media-src 'self' blob: mediastream:;">  <!-- media-src/mediastream 允许摄像头 -->
+  <title>FairScan Desktop</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- ===== 自绘标题栏（WinUI TitleBar） ===== -->
+  <header class="titlebar" id="titlebar">
+    <div class="brand">
+      <svg class="brand-glyph" viewBox="0 0 16 16"><path d="M1 2h14v11H9l-2 2-2-2H1z"/></svg>
+      <span class="brand-text">FairScan</span>
+    </div>
+    <span class="titlebar-hint">文档扫描 · OCR 工作站</span>
+    <div class="spacer"></div>
+    <div class="window-controls">
+      <button id="winMin" class="wc" title="最小化"><svg viewBox="0 0 16 16"><path d="M2 8h12v1H2z"/></svg></button>
+      <button id="winMax" class="wc" title="最大化"><svg viewBox="0 0 16 16"><path d="M3 3h10v10H3zM4 4v8h8V4z"/></svg></button>
+      <button id="winClose" class="wc close" title="关闭"><svg viewBox="0 0 16 16"><path d="M3 3l10 10M13 3L3 13" stroke="currentColor" stroke-width="1.2"/></svg></button>
+    </div>
+  </header>
+
+  <!-- ===== 命令栏（WinUI 浮起 CommandBar） ===== -->
+  <header class="commandbar">
+    <div class="cmd-group">
+      <button id="btnCamera" class="cmd" title="打开摄像头拍照">
+        <svg class="glyph" viewBox="0 0 16 16"><path d="M2 5.5h2.5L6 3h4l1.5 2.5H14a1 1 0 0 1 1 1V12a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V6.5a1 1 0 0 1 1-1z"/><circle cx="8" cy="9.5" r="2.2"/></svg><span class="cmd-label">拍照</span>
+      </button>
+      <span class="cmd-sep"></span>
+      <button id="btnAddFiles" class="cmd" title="添加图片">
+        <svg class="glyph" viewBox="0 0 16 16"><path d="M3 8h5V3h1v5h5v1H9v5H8V9H3z"/></svg><span class="cmd-label">添加</span>
+      </button>
+      <button id="btnAddDir" class="cmd" title="添加文件夹">
+        <svg class="glyph" viewBox="0 0 16 16"><path d="M2 3.5h4.6L8 5h6v7.5a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1z"/></svg><span class="cmd-label">目录</span>
+      </button>
+      <label class="cmd-check" id="subdirToggle" title="添加文件夹时包含所有子文件夹">
+        <input id="paramSubdirs" type="checkbox">
+        <span>含子目录</span>
+      </label>
+      <button id="btnClearFiles" class="cmd" title="清空列表">
+        <svg class="glyph" viewBox="0 0 16 16"><path d="M6 2h4v1H6zm-3 2h10v1H3zm1 2v7a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V6z"/></svg><span class="cmd-label">清空</span>
+      </button>
+      <span class="cmd-sep"></span>
+      <button id="btnOpenOut" class="cmd" title="在资源管理器中打开输出目录">
+        <svg class="glyph" viewBox="0 0 16 16"><path d="M2 3.5h5l1.5 1.5h5.5v7a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1zm1 1v6.5h10V6H8.5L7 4.5z"/></svg><span class="cmd-label">输出</span>
+      </button>
+    </div>
+
+    <div class="spacer"></div>
+
+    <div class="cmd-group">
+      <button id="btnToggleLog" class="cmd" title="展开/收起输出日志">
+        <svg class="glyph" viewBox="0 0 16 16"><path d="M3 3h10v1H3zm0 3h7v1H3zm0 3h10v1H3zm0 3h5v1H3z"/></svg><span class="cmd-label">日志</span>
+      </button>
+      <button id="btnOpenOcr" class="cmd" title="编辑 OCR 词条文本">
+        <svg class="glyph" viewBox="0 0 16 16"><path d="M11.7 1.3l3 3L5 14H2v-3zm1.3.7l-1 1L13 4.4l1-1zM3 12.6L4.4 14H3z"/></svg><span class="cmd-label">OCR</span>
+      </button>
+      <button id="btnSettings" class="cmd icon-only" title="设置">
+        <svg class="glyph" viewBox="0 0 16 16" fill-rule="evenodd"><path d="M 14.03 9.45 A 6.2 6.2 0 0 1 13.29 11.24 L 11.46 10.56 A 4.3 4.3 0 0 1 10.56 11.46 L 11.24 13.29 A 6.2 6.2 0 0 1 9.45 14.03 L 8.64 12.25 A 4.3 4.3 0 0 1 7.36 12.25 L 6.55 14.03 A 6.2 6.2 0 0 1 4.76 13.29 L 5.44 11.46 A 4.3 4.3 0 0 1 4.54 10.56 L 2.71 11.24 A 6.2 6.2 0 0 1 1.97 9.45 L 3.75 8.64 A 4.3 4.3 0 0 1 3.75 7.36 L 1.97 6.55 A 6.2 6.2 0 0 1 2.71 4.76 L 4.54 5.44 A 4.3 4.3 0 0 1 5.44 4.54 L 4.76 2.71 A 6.2 6.2 0 0 1 6.55 1.97 L 7.36 3.75 A 4.3 4.3 0 0 1 8.64 3.75 L 9.45 1.97 A 6.2 6.2 0 0 1 11.24 2.71 L 10.56 4.54 A 4.3 4.3 0 0 1 11.46 5.44 L 13.29 4.76 A 6.2 6.2 0 0 1 14.03 6.55 L 12.25 7.36 A 4.3 4.3 0 0 1 12.25 8.64 L 14.03 9.45 M 6.50 8.00 a 1.50 1.50 0 1 0 3.00 0 a 1.50 1.50 0 1 0 -3.00 0 z"/></svg>
+      </button>
+      <span class="cmd-sep"></span>
+      <button id="btnScan" class="cmd accent">
+        <svg class="glyph" viewBox="0 0 16 16"><path d="M2 2h3V1H1v4h1zm10-1h3v4h-1V2h-2zm2 12h-3v1h4v-4h-1zm-12 0V9H1v4h3zM3 5h10v6H3z"/></svg><span class="cmd-label">开始扫描</span>
+      </button>
+      <button id="btnStop" class="cmd" disabled title="停止当前任务">
+        <svg class="glyph" viewBox="0 0 16 16"><path d="M4 4h8v8H4z"/></svg><span class="cmd-label">停止</span>
+      </button>
+    </div>
+
+    <span id="cliStatus" class="cli-status">检查 JVM 内核…</span>
+  </header>
+
+  <!-- ===== 主内容：三栏卡片 ===== -->
+  <main class="layout">
+    <!-- 左：文件列表 -->
+    <aside class="card file-card">
+      <div class="card-header">
+        <span class="card-title">文件</span>
+        <span id="fileCount" class="badge">0</span>
+      </div>
+      <div class="drop-zone" id="dropZone">
+        <ul id="fileList" class="file-list"></ul>
+        <div class="drop-hint" id="dropHint">
+          <svg class="drop-icon" viewBox="0 0 16 16"><path d="M3 8l5-5 5 5h-3v4H6V8z"/></svg>
+          拖拽图片到此处<br>或点击「添加」
+        </div>
+      </div>
+    </aside>
+
+    <!-- 中：预览 -->
+    <section class="card preview-card">
+      <div class="card-header">
+        <span id="previewTitle" class="card-title">预览</span>
+        <div class="seg" role="group">
+          <button id="btnViewSrc" class="seg-btn active">原图</button>
+          <button id="btnViewResult" class="seg-btn">结果</button>
+        </div>
+        <div class="spacer"></div>
+        <button id="btnEditQuad" class="cmd small active" title="在原图上显示/拖动检测四边形">
+          <svg class="glyph" viewBox="0 0 16 16"><path d="M3 3h4v1H4v3H3zm9 0v4h-1V4h-3V3zm-9 10v-4h1v3h3v1zm10 0h-4v-1h3v-3h1z"/></svg><span class="cmd-label">编辑四角</span>
+        </button>
+        <button id="btnRerunQuad" class="cmd small" disabled title="用当前四角重新处理选中文件">
+          <svg class="glyph" viewBox="0 0 16 16"><path d="M8 2a6 6 0 1 0 4.24 10.24l-.7-.7A5 5 0 1 1 8 3v3l4-4-4-4v3z"/></svg><span class="cmd-label">用四角重扫</span>
+        </button>
+      </div>
+      <div class="preview-stage" id="previewStage">
+        <img id="previewImg" alt="预览" draggable="false">
+        <svg id="quadOverlay" class="quad-overlay hidden">
+          <polygon id="quadPolygon"></polygon>
+          <circle id="qh0" class="quad-handle" data-i="0" r="6"></circle>
+          <circle id="qh1" class="quad-handle" data-i="1" r="6"></circle>
+          <circle id="qh2" class="quad-handle" data-i="2" r="6"></circle>
+          <circle id="qh3" class="quad-handle" data-i="3" r="6"></circle>
+        </svg>
+        <div class="empty-hint" id="previewEmpty">
+          添加文件后显示原图；<br>扫描后可在「结果」视图查看
+        </div>
+      </div>
+      <div class="preview-info" id="previewInfo"></div>
+    </section>
+
+    <!-- 右：参数 -->
+    <aside class="card param-card">
+      <div class="card-header">
+        <span class="card-title">扫描参数</span>
+      </div>
+      <div class="param-body">
+        <div class="field">
+          <label class="field-label" for="paramMode">检测模式</label>
+          <select id="paramMode">
+            <option value="CAPTURE">CAPTURE（拍照）</option>
+            <option value="IMPORT" selected>IMPORT（导入）</option>
+          </select>
+        </div>
+        <div class="field">
+          <label class="field-label" for="paramRotation">旋转</label>
+          <select id="paramRotation">
+            <option value="auto" selected>自动识别</option>
+            <option value="0">0°</option>
+            <option value="90">90°</option>
+            <option value="180">180°</option>
+            <option value="270">270°</option>
+          </select>
+        </div>
+        <div class="field">
+          <label class="field-label" for="paramColor">色彩模式</label>
+          <select id="paramColor">
+            <option value="AUTO">自动</option>
+            <option value="COLOR">彩色</option>
+            <option value="GRAYSCALE">灰度</option>
+          </select>
+        </div>
+        <div class="field">
+          <label class="field-label" for="paramQuality">输出质量</label>
+          <select id="paramQuality">
+            <option value="LOW">低</option>
+            <option value="BALANCED" selected>均衡</option>
+            <option value="HIGH">高</option>
+          </select>
+        </div>
+        <div class="field">
+          <label class="field-label" for="paramThreads">推理线程</label>
+          <input id="paramThreads" type="number" min="1" max="8" value="2">
+        </div>
+
+        <div class="field">
+          <label class="field-label" for="paramLang">OCR 语言</label>
+          <input id="paramLang" value="eng+chi_sim" spellcheck="false">
+        </div>
+        <div class="field">
+          <label class="checkbox">
+            <input id="paramDewarp" type="checkbox">
+            <span class="checkmark"></span>
+            <span>曲面矫正（UVDoc 展开弯曲/卷曲的文档）</span>
+          </label>
+          <span class="field-hint">模型: models/uvdoc.onnx，未找到模型时自动跳过</span>
+        </div>
+        <div class="field">
+          <label class="checkbox">
+            <input id="paramRemoveShadow" type="checkbox">
+            <span class="checkmark"></span>
+            <span>去阴影（低光/强投影时提亮背景）</span>
+          </label>
+          <span class="field-hint">形态学背景估计 + 除法归一化，对彩色与灰度均有效</span>
+        </div>
+        <div class="field">
+          <label class="field-label" for="paramOutDir">输出目录</label>
+          <span class="path-row">
+            <input id="paramOutDir" placeholder="输出目录（默认：文档/Fairsacn扫描结果）" spellcheck="false">
+            <button id="btnBrowseOut" class="cmd icon-only" title="浏览"><svg class="glyph" viewBox="0 0 16 16"><path d="M2 3.5h5l1.5 1.5h5.5v7a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1zm1 1v6.5h10V6H8.5L7 4.5z"/></svg></button>
+          </span>
+        </div>
+      </div>
+    </aside>
+  </main>
+
+  <!-- ===== 底部状态卡：进度 + 日志 ===== -->
+  <footer class="status-card">
+    <div class="status-row">
+      <div class="progress-wrap"><div id="progressBar" class="progress-bar"></div></div>
+      <span id="statusLine" class="status-line">就绪</span>
+    </div>
+    <div id="logPanel" class="log-panel hidden"></div>
+  </footer>
+
+  <!-- ===== OCR 词条编辑对话框（WinUI ContentDialog 风格） ===== -->
+  <div id="ocrDialog" class="dialog-backdrop hidden">
+    <div class="dialog" role="dialog" aria-modal="true">
+      <div class="dialog-header">
+        <span class="dialog-title">OCR 词条编辑</span>
+        <span id="ocrFileLabel" class="dialog-subtitle"></span>
+        <div class="spacer"></div>
+        <button id="ocrClose" class="cmd icon-only" title="关闭"><svg class="glyph" viewBox="0 0 16 16"><path d="M3 3l10 10M13 3L3 13" stroke="currentColor" stroke-width="1.2"/></svg></button>
+      </div>
+      <div class="dialog-body">
+        <div class="ocr-table-wrap">
+          <table id="ocrTable">
+            <thead>
+              <tr>
+                <th class="col-text">文本（可编辑）</th>
+                <th class="col-pos">left,top,right,bottom</th>
+                <th class="col-line">行高</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <div class="ocr-empty" id="ocrEmpty">
+          尚无 OCR 词条。勾选「生成 PDF」并扫描后，词条会出现在这里。
+        </div>
+      </div>
+      <div class="dialog-footer">
+        <button id="btnSaveWords" class="cmd">保存词条 JSON</button>
+        <button id="btnRegenPdf" class="cmd accent">重新生成 PDF</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 设置对话框（WinUI ContentDialog 风格） ===== -->
+  <div id="settingsDialog" class="dialog-backdrop hidden">
+    <div class="dialog settings-dialog" role="dialog" aria-modal="true">
+      <div class="dialog-header">
+        <span class="dialog-title">设置</span>
+        <div class="spacer"></div>
+        <button id="settingsClose" class="cmd icon-only" title="关闭"><svg class="glyph" viewBox="0 0 16 16"><path d="M3 3l10 10M13 3L3 13" stroke="currentColor" stroke-width="1.2"/></svg></button>
+      </div>
+      <div class="dialog-body settings-body">
+        <div class="field">
+          <span class="field-label">导出选项</span>
+          <label class="checkbox">
+            <input id="paramExportImage" type="checkbox" checked>
+            <span class="checkmark"></span>
+            <span>导出图片（JPG 到「图片」文件夹）</span>
+          </label>
+          <label class="checkbox">
+            <input id="paramExportPdf" type="checkbox" checked>
+            <span class="checkmark"></span>
+            <span>导出 PDF（含 OCR 隐形文本层，到「PDF」文件夹）</span>
+          </label>
+          <span class="field-hint">文件按扫描日期时间命名（如 扫描结果-20260817-153012-1）</span>
+        </div>
+        <div class="field">
+          <label class="field-label" for="paramModel">分割模型</label>
+          <select id="paramModel">
+            <option value="models/fairscan-segmentation-model.tflite" selected>原版 TFLite（与 Android 一致）</option>
+            <option value="models/u2netp.onnx">U²-Net u2netp（通用分割，320×320）</option>
+          </select>
+        </div>
+        <div class="field">
+          <label class="field-label" for="paramTessdata">tessdata 目录（OCR 语言包）</label>
+          <span class="path-row">
+            <input id="paramTessdata" value="tessdata" spellcheck="false">
+            <button id="btnBrowseTess" class="cmd icon-only" title="浏览"><svg class="glyph" viewBox="0 0 16 16"><path d="M2 3.5h5l1.5 1.5h5.5v7a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1zm1 1v6.5h10V6H8.5L7 4.5z"/></svg></button>
+          </span>
+        </div>
+        <div class="field">
+          <label class="field-label" for="paramCliDir">JVM 内核目录</label>
+          <span class="path-row">
+            <input id="paramCliDir" placeholder="默认: build/install/fairscan-desktop" spellcheck="false">
+            <button id="btnBrowseCli" class="cmd icon-only" title="浏览"><svg class="glyph" viewBox="0 0 16 16"><path d="M2 3.5h5l1.5 1.5h5.5v7a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1zm1 1v6.5h10V6H8.5L7 4.5z"/></svg></button>
+          </span>
+          <span class="field-hint">修改后自动重新探测内核</span>
+        </div>
+      </div>
+      <div class="dialog-footer">
+        <button id="settingsClose2" class="cmd">关闭</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 摄像头拍照对话框 ===== -->
+  <div id="cameraDialog" class="dialog-backdrop hidden">
+    <div class="dialog camera-dialog" role="dialog" aria-modal="true">
+      <div class="dialog-header">
+        <span class="dialog-title">摄像头拍照</span>
+        <div class="spacer"></div>
+        <button id="cameraClose" class="cmd icon-only" title="关闭"><svg class="glyph" viewBox="0 0 16 16"><path d="M3 3l10 10M13 3L3 13" stroke="currentColor" stroke-width="1.2"/></svg></button>
+      </div>
+      <div class="dialog-body">
+        <div class="camera-viewfinder">
+          <video id="cameraVideo" autoplay playsinline muted></video>
+          <svg id="cameraQuad" class="camera-quad hidden">
+            <polygon id="cameraQuadPolygon" class="camera-quad-polygon"></polygon>
+          </svg>
+          <div class="camera-placeholder" id="cameraPlaceholder">
+            <svg class="drop-icon" viewBox="0 0 16 16"><path d="M2 5.5h2.5L6 3h4l1.5 2.5H14a1 1 0 0 1 1 1V12a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V6.5a1 1 0 0 1 1-1z"/><circle cx="8" cy="9.5" r="2.2"/></svg>
+            <span>请授权摄像头访问</span>
+          </div>
+        </div>
+        <div class="camera-error" id="cameraError"></div>
+      </div>
+      <div class="dialog-footer camera-footer">
+        <label class="checkbox camera-locate">
+          <input id="cameraAutoLocate" type="checkbox" checked>
+          <span class="checkmark"></span>
+          <span>自动定位文档</span>
+        </label>
+        <button id="btnCapture" class="cmd accent capture-btn"><svg class="glyph" viewBox="0 0 16 16"><path d="M2 5.5h2.5L6 3h4l1.5 2.5H14a1 1 0 0 1 1 1V12a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V6.5a1 1 0 0 1 1-1z"/><circle cx="8" cy="9.5" r="2.2"/></svg> 拍照</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast hidden"></div>
+  <script src="app.js"></script>
+</body>
+</html>

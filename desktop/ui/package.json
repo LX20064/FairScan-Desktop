@@ -1,0 +1,81 @@
+{
+  "name": "fairscan-desktop-ui",
+  "productName": "FairScan Desktop",
+  "version": "0.1.0",
+  "description": "FairScan 桌面工作站（Electron UI + JVM 处理内核）",
+  "author": "FairScan authors",
+  "main": "src/main.js",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder --win",
+    "dist:dir": "electron-builder --win --dir"
+  },
+  "build": {
+    "appId": "org.fairscan.desktop",
+    "productName": "FairScan Desktop",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "src/**/*",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "../build/install/fairscan-desktop",
+        "to": "kernel",
+        "filter": [
+          "**/*"
+        ]
+      },
+      {
+        "from": "../models",
+        "to": "models"
+      },
+      {
+        "from": "../tessdata",
+        "to": "tessdata"
+      },
+      {
+        "from": "../build/jre",
+        "to": "jre"
+      }
+    ],
+    "win": {
+      "icon": "src/icon.ico",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "nsis": {
+      "artifactName": "FairScan-Setup-${version}-${arch}.${ext}",
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "FairScan Desktop"
+    },
+    "portable": {
+      "artifactName": "FairScan-Portable-${version}-${arch}.${ext}"
+    }
+  },
+  "devDependencies": {
+    "electron": "^37.2.0",
+    "electron-builder": "^26.0.12"
+  },
+  "dependencies": {
+    "koffi": "^3.1.5"
+  }
+}

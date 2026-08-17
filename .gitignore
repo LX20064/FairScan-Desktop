@@ -1,0 +1,34 @@
+# ---------- Gradle / JVM ----------
+.gradle/
+build/
+*/build/
+.kotlin/
+
+# ---------- IDE ----------
+.idea/
+*.iml
+.vscode/
+
+# ---------- Node / Electron ----------
+node_modules/
+desktop/ui/dist/
+desktop/ui/dist-new/
+desktop/ui-win7/dist-win7/
+
+# ---------- Python ----------
+desktop/.venv/
+__pycache__/
+*.pyc
+
+# ---------- 输出 / 调试产物 ----------
+desktop/output/
+desktop/output*/
+desktop/cmpre/
+desktop/_backup_ir10/
+desktop/models/uvdoc_tmp.onnx
+desktop/models/_gs2.onnx
+desktop/models/_gs_test.onnx
+
+# ---------- 系统 ----------
+.DS_Store
+Thumbs.db

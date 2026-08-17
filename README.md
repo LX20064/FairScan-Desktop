@@ -34,6 +34,12 @@ pipeline is shared between both platforms, so Android and Windows behave identic
 - Website: https://fairscan.org  
 - Blog: https://fairscan.org/blog/
 
+> **Note on the Android app:** the Android source is kept in this repository (with the upstream build
+> configuration preserved), but it may **not compile out-of-the-box** — it requires a specific Android SDK
+> toolchain (e.g. JDK 17 + a compatible AGP/Android Gradle setup) and may need additional configuration.
+> The project is primarily maintained as the **Windows desktop version**; the shared `imageprocessing`
+> module is the same code used on both platforms.
+
 ---
 
 ## Windows desktop version

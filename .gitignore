@@ -32,7 +32,3 @@ desktop/models/_gs_test.onnx
 # ---------- 系统 ----------
 .DS_Store
 Thumbs.db
-
-# ---------- 测试素材 / 商店截图（不入库） ----------
-app/src/debug/assets/
-metadata/en-US/images/phoneScreenshots/
